@@ -1,0 +1,10 @@
+I asked Peter about depth of the genes and how to match the reads in general
+
+1) Depth has to be at least 10 for the whole gene meaning that every part of it has to have depth >= 10
+
+2) Depth of sequencing in our NGS sample is ~50 which means that the whole genome was sequenced ~50 times. 
+That also means that in the perfect scenario, if a resistance gene is present, its depth will be ~50. 
+It will be lower due to sequencing errors
+
+3) We need to match whole reads to the resistance gene, not just separate k-mers. Even though 19-mer
+should be unique, we have to exclude the chance for a random match of a k-mer from an irrelevant read
