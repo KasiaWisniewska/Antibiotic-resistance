@@ -16,7 +16,6 @@ def get_genes(filename):
 		genes = []
 		gene_names = []
 		dna = ''
-		poop = []
 		for line in filein:
 			if line[0] == '>':
 				gene_names.append(line[:-1])
@@ -31,10 +30,14 @@ def get_genes(filename):
 def get_gene_kmer(genes, k):
 	### returns a set of all k-mers taken from all resistance genes
 	gene_kmer = set()
-	for gene in genes:
-		for i in range(len(gene)-k+1):		# len-k+1 takes the last symbol too
-			gene_kmer.add(gene[i:i+k])		# [i:i+19] -- 19-mer
-	return gene_kmer
+	gene_kmer_sep = []
+	for gene_num in range(len(genes)):
+		gene_kmer_sep.append(set())
+		for i in range(len(genes[gene_num])-k+1):		# len-k+1 takes the last symbol too
+#			print(i, len(gene_kmer_sep))				######## visualization
+			gene_kmer.add(genes[gene_num][i:i+k])		# [i:i+19] -- 19-mer
+			gene_kmer_sep[gene_num].add(genes[gene_num][i:i+k])
+	return [gene_kmer, gene_kmer_sep]
 
 def get_ngsread_kmer_list(dna, k):
 	### returns a LIST of all k-mers extracted from an NGS read in the 
@@ -72,7 +75,8 @@ def match_ngs_to_gene(ngsread_kmer, gene):
 					
 					# list with zeroes, length = len(gene)
 					depth = [0 for j in range(len(gene))]
-					print('before',len(depth))				####### print for visualization, delete later
+					#print('before',len(depth))				####### print for visualization, delete later
+					len_before = len(depth)
 					# depth = 1 for the first matched k-mer
 					depth[start_gene:start_gene+k] = [1 for j in range(k)]
 
@@ -86,7 +90,10 @@ def match_ngs_to_gene(ngsread_kmer, gene):
 							pos_gene += k
 						
 						else:
-							print('after',len(depth))		####### print for visualization, delete later
+#							print('after',len(depth))		####### print for visualization, delete later
+							len_after = len(depth)
+							if len_before != len_after:
+								raise ValueError()
 							return depth
 
 
@@ -114,10 +121,15 @@ def match_ngs_to_gene(ngsread_kmer, gene):
 k = 19					# k-mer size, usually 19
 
 [gene_list, gene_names] = get_genes('resistance_genes.fsa')
-gene_kmer = get_gene_kmer(gene_list, k)
-#print(gene_list[0], len(gene_kmer))
+
+# gene_kmer for set of k-mers from all genes
+# gene_kmer_sep for list of sets of k-mer for separate genes
+[gene_kmer, gene_kmer_sep] = get_gene_kmer(gene_list, k)
+print(len(gene_list))					######## print for visualization
 count = 0					# counts dna reads in the NGS file
 countin = 0					# counts dna reads with at least one k-mer match
+# counts approved k-mer matches -- the ones contributing to depth
+count_approved = 0			
 
 filename = read_filename()
 filein = gzip.open(filename, 'r')
@@ -136,21 +148,28 @@ for b_line in filein:
 			count += 1
 
 			# check if at least 1 k-mer from read is present in genes
-			ngsread_kmer = get_ngsread_kmer_list(dna_read, k)
+#			ngsread_kmer = get_ngsread_kmer_list(dna_read, k)
 
-			for kmer in ngsread_kmer:
-				if kmer in gene_kmer:
-					countin += 1
-					for gene_num in range(len(gene_list)):
+#			for kmer in ngsread_kmer:
+#				if kmer in gene_kmer:
+#					countin += 1
+#					for gene_num in range(len(gene_list)):
+#						depth_update = match_ngs_to_gene(ngsread_kmer, gene_list[gene_num])
+#						if depth_update is not None:
+#							print(gene_names[gene_num], '|', countin, '| Read #', count)	####### print for visualization, delete later
+#							print(depth_update, '\n')										####### print for visualization, delete later
+#					break					# takes 2m9s
+
+			ngsread_kmer_set = get_ngsread_kmer_set(dna_read, k)		
+			if len( ngsread_kmer_set.intersection(gene_kmer) ) > 0:		# or > 1?
+				countin += 1				# takes 1m59.9s
+				ngsread_kmer = get_ngsread_kmer_list(dna_read, k)	# takes 2m9s
+				for gene_num in range(len(gene_list)):
+					if len( ngsread_kmer_set.intersection(gene_kmer_sep[gene_num]) ) > 0:
 						depth_update = match_ngs_to_gene(ngsread_kmer, gene_list[gene_num])
 						if depth_update is not None:
-							print(gene_names[gene_num], '|', countin, '| Read #', count)		####### print for visualization, delete later
-							print(depth_update, '\n')						####### print for visualization, delete later
-					break					# takes 2m9s
+							count_approved += 1
+							print(count_approved, gene_names[gene_num], '|', countin, '| Read #', count)	####### print for visualization, delete later
+							print(depth_update, '\n')
 
-#			ngsread_kmer = get_ngsread_kmer_set(dna_read, k)		
-#			if len( ngsread_kmer.intersection(gene_kmer) ) > 0:		# or > 1?
-#				countin += 1				# takes 1m59.9s
-#				ngsread_kmer = get_ngsread_kmer_list(dna_read, k)	# takes 2m9s
-
-print(countin, '/', count)					# 6,717 / 3,469,171			
+print(count_approved, '/', countin, '/', count)					# 6,717 / 3,469,171			
