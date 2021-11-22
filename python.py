@@ -86,16 +86,17 @@ def match_ngs_to_gene(ngsread_kmer, gene):
 						if ngsread_kmer[pos_read] == gene[pos_gene:pos_gene+k]:
 							depth[pos_gene:pos_gene+k] = [1 for j in range(k)]		# optimize later?
 							#depth[pos_gene+k-1] = 1
-							pos_read += k
-							pos_gene += k
+							pos_read += 1
+							pos_gene += 1
 						
 						else:
 #							print('after',len(depth))		####### print for visualization, delete later
 							len_after = len(depth)
 							if len_before != len_after:
 								raise ValueError()
-							return depth
+							return None
 
+					return depth
 
 
 
@@ -103,7 +104,28 @@ def match_ngs_to_gene(ngsread_kmer, gene):
 					return None
 
 			elif start_gene == 0:
-				pass
+									# list with zeroes, length = len(gene)
+					depth = [0 for j in range(len(gene))]
+					#print('before',len(depth))				####### print for visualization, delete later
+					len_before = len(depth)
+					# depth = 1 for the first matched k-mer
+					depth[start_gene:start_gene+k] = [1 for j in range(k)]
+
+					pos_read = start_read + 1
+					pos_gene = start_gene + 1
+					while pos_read < len(ngsread_kmer) and pos_gene < len(gene)-k:
+						if ngsread_kmer[pos_read] == gene[pos_gene:pos_gene+k]:
+							depth[pos_gene:pos_gene+k] = [1 for j in range(k)]		# optimize later?
+							#depth[pos_gene+k-1] = 1
+							pos_read += 1
+							pos_gene += 1
+						
+						else:
+#							print('after',len(depth))		####### print for visualization, delete later
+							len_after = len(depth)
+							if len_before != len_after:
+								raise ValueError()
+							return None
 
 
 
@@ -129,7 +151,14 @@ print(len(gene_list))					######## print for visualization
 count = 0					# counts dna reads in the NGS file
 countin = 0					# counts dna reads with at least one k-mer match
 # counts approved k-mer matches -- the ones contributing to depth
-count_approved = 0			
+count_approved = 0
+
+depth = []
+for i in range(len(gene_list)):
+	depth.append([])
+	for j in range(len(gene_list[i])):
+		depth[i].append(0)
+
 
 filename = read_filename()
 filein = gzip.open(filename, 'r')
@@ -168,8 +197,30 @@ for b_line in filein:
 					if len( ngsread_kmer_set.intersection(gene_kmer_sep[gene_num]) ) > 0:
 						depth_update = match_ngs_to_gene(ngsread_kmer, gene_list[gene_num])
 						if depth_update is not None:
+							
+							for i in range(len(depth_update)):
+								depth[gene_num][i] += depth_update[i]
 							count_approved += 1
-							print(count_approved, gene_names[gene_num], '|', countin, '| Read #', count)	####### print for visualization, delete later
-							print(depth_update, '\n')
+							print(count_approved/18700*100, '%')
 
+							#print(count_approved, gene_names[gene_num], '|', countin, '| Read #', count)	####### print for visualization, delete later
+							#print(depth_update, '\n')
+
+set2 = set()
+for gene_num in range(len(depth)):
+	hitCount = 0
+	for nt in depth[gene_num]:
+		if nt >= 10: 
+			hitCount += 1
+	a = hitCount/len(depth[gene_num])
+	if a >= 0.95:
+		set2.add(gene_num)
+
+
+
+set1 = {i for i in range(11)}
+for gene_num in set2:
+		print(gene_names[gene_num])
+		print(depth[gene_num])
+		print()
 print(count_approved, '/', countin, '/', count)					# 6,717 / 3,469,171			
