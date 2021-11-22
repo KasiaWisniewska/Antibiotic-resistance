@@ -206,20 +206,21 @@ for b_line in filein:
 							#print(count_approved, gene_names[gene_num], '|', countin, '| Read #', count)	####### print for visualization, delete later
 							#print(depth_update, '\n')
 
-set2 = set()
+coverage = dict()
 for gene_num in range(len(depth)):
 	hitCount = 0
 	for nt in depth[gene_num]:
 		if nt >= 10: 
 			hitCount += 1
 	a = hitCount/len(depth[gene_num])
-	if a >= 0.95:
-		set2.add(gene_num)
+	coverage[gene_num] = a
+
+sorted_gene_num = sorted(coverage.keys(), key=coverage.get, reverse=True)
 
 
 
 set1 = {i for i in range(11)}
-for gene_num in set2:
+for gene_num in sorted_gene_num[:15]:
 		print(gene_names[gene_num])
 		print(depth[gene_num])
 		print()
