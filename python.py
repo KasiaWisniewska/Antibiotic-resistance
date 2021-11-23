@@ -47,17 +47,7 @@ def get_genes(filename):
 				dna += line[:-1]
 		genes.append(dna)
 	return genes, gene_names
-'''	
-def complementary_strand(read):
-	### returns a list of original genes and reverse complementary genes together
-	transTable = str.maketrans('ATCG', 'TAGC')
-	for gene in genes:
-		complementDNA = read.translate(transTable)
-		rev_dna = complementDNA[::-1]
-		read.append(rev_dna)  
-	
-	return read
-'''
+
 
 def complementary_strand(read):
 	### returns a reverse complementary version of the read
