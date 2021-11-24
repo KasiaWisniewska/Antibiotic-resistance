@@ -138,13 +138,6 @@ for file in filenames:	#to iterate through both files
 									for hit in pos:
 										for i in range(hit[1],hit[1]+k):
 											depth[hit[0]][i] += 1
-'''				
-				#reinitializing hit numbers (one hit for one read only)					
-				for single_depth in depth:
-					for position in single_depth:
-						if position >= read_count:
-							position = read_count
-'''
 
 coverageCount = 0
 coverage = dict()
