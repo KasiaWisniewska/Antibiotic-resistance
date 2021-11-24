@@ -76,7 +76,6 @@ def get_gene_kmer(genes, k):
 
 
 
-
 '''MAIN CODE'''
 	
 k = 19 #setting the kmer length
@@ -106,12 +105,11 @@ for i in range(len(gene_list)):
 #opening both read files
 
 filenames = read_filename()
-
+read_count = 0
 for file in filenames:	#to iterate through both files
 	with gzip.open(file, "r") as infile:
 		for b_line in infile:
 			line = b_line.decode('ASCII')
-			read_count = 0
 			if line[0] == '@':
 				flag = True
 			elif flag:
@@ -132,10 +130,11 @@ for file in filenames:	#to iterate through both files
 						#checking if extremities of the read fit the dict (initial read elimination)
 						start_check = gene_dict.get(read_kmer[0])
 						end_check = gene_dict.get(read_kmer[-1])
-						if start_check is not None or end_check is not None: 
-							for kmer in read_kmer: 
+						if start_check is not None or end_check is not None:
+							for kmer in read_kmer[::19]: 
 								pos = gene_dict.get(kmer)
 								if pos is not None: 
+									print(read_count)
 									for hit in pos:
 										for i in range(hit[1],hit[1]+k):
 											depth[hit[0]][i] += 1
@@ -147,8 +146,46 @@ for file in filenames:	#to iterate through both files
 							position = read_count
 '''
 
-print(depth)			
-					
+coverageCount = 0
+coverage = dict()
+for gene_num in range(len(depth)):
+	hitCount = 0
+	for nt in depth[gene_num]:
+		if nt >= 10: 
+			hitCount += 1
+	a = hitCount/len(depth[gene_num])
+	if a > 0.95:
+		coverageCount += 1
+	coverage[gene_num] = a
+
+sorted_gene_num = sorted(coverage.keys(), key=coverage.get, reverse=True)
+
+print(coverageCount, " genes have achieved coverage above 95%, meaning they are very likely present in the sample.", sep='')
+
+res_list = [["Beta-lactam", 0], ["Phenicol", 0], ["Aminoglycoside", 0], 
+			["Tetracycline", 0], ["Fluoroquinolone and aminoglycoside", 0], 
+			["Sulphonamide resistance", 0], ["Fosfomycin resistance", 0]]
+for gene_num in sorted_gene_num[:coverageCount]:
+#	print(gene_names[gene_num], "; gene coverage: ", coverage[gene_num]*100, "%", sep='')	#To see the gene names that are covered
+#	print(depth[gene_num])																	#To see corresponding depth distribution 
+	for res in res_list:
+		if res[0] in gene_names[gene_num]:
+			res[1] += 1
+
+print("Many of these genes encode resistance for the same antibiotics, notably for:")			
+for res in res_list:
+	print(res[0], "resistance :", res[1], "genes present.")									#Shows only how many genes for which resistance are present
+
+more_info = Input("Do you wish to see the gene names (type g) or the gene depth distribution (type d)? If not: type 'n': ")
+
+for gene_num in sorted_gene_num[:coverageCount]:
+	if more_info == "g":
+		print(gene_names[gene_num], "; gene coverage: ", coverage[gene_num]*100, "%", sep='')
+	elif more_info == "d":
+		print(depth[gene_num])
+	else:
+		break
+	
 			
 					
 					
