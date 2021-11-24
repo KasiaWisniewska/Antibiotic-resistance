@@ -155,9 +155,9 @@ sorted_gene_num = sorted(coverage.keys(), key=coverage.get, reverse=True)
 
 print(coverageCount, " genes have achieved coverage above 95%, meaning they are very likely present in the sample.", sep='')
 
-res_list = [["Beta-lactam", 0], ["Phenicol", 0], ["Aminoglycoside", 0], 
-			["Tetracycline", 0], ["Fluoroquinolone and aminoglycoside", 0], 
-			["Sulphonamide resistance", 0], ["Fosfomycin resistance", 0]]
+res_list =	[["Beta-lactam", 0], ["Phenicol", 0], ["Aminoglycoside", 0], 
+		["Tetracycline", 0], ["Fluoroquinolone and aminoglycoside", 0], 
+		["Sulphonamide resistance", 0], ["Fosfomycin resistance", 0]]
 for gene_num in sorted_gene_num[:coverageCount]:
 #	print(gene_names[gene_num], "; gene coverage: ", coverage[gene_num]*100, "%", sep='')	#To see the gene names that are covered
 #	print(depth[gene_num])																	#To see corresponding depth distribution 
