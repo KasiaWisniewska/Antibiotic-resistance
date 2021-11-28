@@ -119,14 +119,15 @@ for file in filenames:	#to iterate through both files
 
 				else:
 					read_count += 1
-					if read_count > 500000:
-						break
+					#if read_count > 500000:
+					#	break
 					# get the dna seq
 					dna_read = line
 					#get the reverse complement for the read
 					rev_read = complementary_strand(dna_read)
 					both_reads = [dna_read, rev_read]
-					for read in both_reads:
+					for read_n in both_reads:
+						read = read_n[:-1]
 						#create kmer lists for both
 						read_kmer = get_ngsread_kmer_list(read, k)
 						#checking if extremities of the read fit the dict (initial read elimination)
@@ -146,8 +147,12 @@ for file in filenames:	#to iterate through both files
 
 								if start_check is not None and start_check.get(gene_num) is not None:
 									if end_check is not None and end_check.get(gene_num) is not None:
-										if read == gene_list[gene_num][ start_check[gene_num]:end_check[gene_num]+k-1 ]:
-											update_reg = [start_check[gene_num], end_check[gene_num]+k]
+										#print(read)
+										#print(gene_list[gene_num][ start_check[gene_num]:end_check[gene_num]+k+1 ])
+										#print(read == gene_list[gene_num][ start_check[gene_num]:end_check[gene_num]+k+1 ])
+										#print()
+										if read == gene_list[gene_num][ start_check[gene_num]:end_check[gene_num]+k+1 ]:
+											update_reg = [start_check[gene_num], end_check[gene_num]+k+1]
 										else:
 											update_reg = None
 									else:
@@ -165,14 +170,21 @@ for file in filenames:	#to iterate through both files
 											else:
 												check_indicator = check_next.get(gene_num)
 										check = gene_dict.get(read_kmer[end_pos])
-										#print(read)
-										#print(gene_list[gene_num][ start_check[gene_num]:check[gene_num]])
-										#print(read[:end_pos] == gene_list[gene_num][ start_check[gene_num]:check[gene_num]])
-										#print()
-										if read[:end_pos] == gene_list[gene_num][ start_check[gene_num]:check[gene_num]]:
-											update_reg = [start_check[gene_num], check[gene_num]+k]
+										print(end_pos, end_pos+k)
+										print(read[:end_pos+k], len(read[:end_pos+k]))
+										#print(gene_list[gene_num][ start_check[gene_num]:check[gene_num]+k], len(gene_list[gene_num][ start_check[gene_num]:check[gene_num]+k]))
+										print(gene_list[gene_num][ start_check[gene_num]: ], len(gene_list[gene_num][ start_check[gene_num]: ]))
+										if read[:end_pos+k] == gene_list[gene_num][ start_check[gene_num]: ]:
+											print(True)
+											input()
 										else:
-											update_reg = None
+											print(False)
+										#if read[:end_pos+k] == gene_list[gene_num][ start_check[gene_num]: ]:
+										#	update_reg = [start_check[gene_num], check[gene_num]+k]
+										#else:
+										#	update_reg = None
+
+
 
 								else:
 									if end_check is not None and end_check.get(gene_num) is not None:
@@ -212,7 +224,7 @@ for gene_num in range(len(depth)):
 		if nt >= 10:
 			hitCount += 1
 	a = hitCount/len(depth[gene_num])
-	if a > 0.5:
+	if a > 0.95:
 		coverageCount += 1
 	coverage[gene_num] = a
 
